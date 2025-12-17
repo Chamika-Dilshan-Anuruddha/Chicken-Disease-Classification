@@ -1,0 +1,17 @@
+tensorflow
+pandas
+dvc
+#notebook
+numpy
+matplotlib
+seaborn
+python-box # converts dicts to dot-accessible objects
+pyYAML # reads YAML configuration files
+tqdm
+#ensure
+joblib # Python library to save/load ML models, cache computations, and parallelize tasks efficiently.
+#types-pyYAML
+scipy
+Flask
+#Flask-Cors
+-e .
