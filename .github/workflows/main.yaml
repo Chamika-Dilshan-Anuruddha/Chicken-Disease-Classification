@@ -12,22 +12,22 @@ permissions:
  contents: read 
 
 jobs:
- inregration:
-  name: Continous Inregration
+ integration:
+  name: Continous Integration
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Code
-   - uses: actions/checkout@v3
+     uses: actions/checkout@v3
   
    - name: Lint Code
-   - run: echo "Linting reporsitory"
+     run: echo "Linting reporsitory"
 
    - name: Run unit tests
-   - run: echo "Running unit tests"
+     run: echo "Running unit tests"
 
  build-and-push-ecr-image:
   name: Continous Delivery
-  needs: inregration
+  needs: integration
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Code
@@ -42,7 +42,7 @@ jobs:
      uses: aws-actions/configure-aws-credentials@v1
      with:
       aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
-      aws-secret-acces-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+      aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
       aws-region: ${{secrets.AWS_REGION}}
   
    - name: Login to AWS ECR 
@@ -58,7 +58,7 @@ jobs:
      run: |
       docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
       docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-      echo "::set-output name=image::ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
  continous-deployment:
   name: Continous Deployment
@@ -72,7 +72,7 @@ jobs:
      uses: aws-actions/configure-aws-credentials@v1
      with:
       aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
-      aws-secret-acces-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+      aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
       aws-region: ${{secrets.AWS_REGION}}
 
    - name: Login to AWS ECR 
@@ -85,12 +85,12 @@ jobs:
 
    - name: Stop and remove container if Running
      run: |
-      docker rm -rv chicken || true
+      docker rm -fv chicken || true
 
    - name: Run Docker Image to serve users
      run: |
-      docker run -d -p 8080:8080 --name=chicken -e 'AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY_ID}}' -e 'AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_ACCESS_KEY}}' -e 'AWS_REGION=${{secrets.AWS_REGION}}' ${{secrets.AWS_ECR_LOGIN_URI}}/${{secrets.ECR_REPOSITORY_NAME}}::latest
+      docker run -d -p 8080:8080 --name=chicken -e 'AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY_ID}}' -e 'AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_ACCESS_KEY}}' -e 'AWS_REGION=${{secrets.AWS_REGION}}' ${{secrets.AWS_ECR_LOGIN_URI}}/${{secrets.ECR_REPOSITORY_NAME}}:latest
 
    - name: Clean prevoius images and containers
      run: |
-      docker system prune -r
+      docker system prune -f
