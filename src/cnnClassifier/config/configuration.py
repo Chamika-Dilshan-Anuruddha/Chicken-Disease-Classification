@@ -1,6 +1,7 @@
 from cnnClassifier.constants import *
 from cnnClassifier.utils.common import read_yaml, create_directories
-from cnnClassifier.entity.config_entity import DataIngestionConfig,PrepareBaseModelConfig
+from cnnClassifier.entity.config_entity import DataIngestionConfig,PrepareBaseModelConfig,PrepareCallBackConfig,TrainingConfig,EvaluationConfig
+import os
 
 class ConfigurationManager:
     def __init__(self,config_filepath=CONFIG_FILE_PATH,params_file_path=PARAMS_FILE_PATH):
@@ -37,3 +38,56 @@ class ConfigurationManager:
         )
 
         return prepare_base_model_config 
+    
+
+    def get_prepare_callback_config(self)->PrepareCallBackConfig:
+        config=self.config.prepare_callbacks
+        model_ckpt_dir=os.path.dirname(config.checkpoint_model_filepath)
+        create_directories([
+            Path(model_ckpt_dir),
+            Path(config.tensorboard_root_log_dir)
+        ])
+
+        prepare_callback_config=PrepareCallBackConfig(
+            root_dir=Path(config.root_dir),
+            tensorboard_root_log_dir=Path(config.tensorboard_root_log_dir),
+            checkpoint_model_filepath=Path(config.checkpoint_model_filepath)
+        )
+        return prepare_callback_config
+    
+
+    def get_training_config(self)->TrainingConfig:
+        config=self.config.training
+        training_data=os.path.join(
+            self.config.data_ingestion.unzip_dir, "Chicken-fecal-images"
+        )
+        create_directories([
+            Path(config.root_dir)
+        ])
+
+        training_config=TrainingConfig(
+            root_dir=Path(config.root_dir),
+            trained_model_path=Path(config.trained_model_path),
+            updatd_base_model_path=Path(self.config.prepare_base_model.updated_base_model_path),
+            training_data=Path(training_data),
+            params_epochs=self.params.EPOCHES,
+            params_batch_size=self.params.BATCH_SIZE,
+            params_is_augmentation=self.params.AGUMENATTION,
+            params_image_size=self.params.IMAGE_SIZE,
+            params_learning_rate=self.params.LEARNING_RATE
+
+        )
+
+        return training_config
+    
+
+    def get_evaluation_config(self)-> EvaluationConfig:
+        evaluation_config=EvaluationConfig(
+            path_of_model=Path(self.config.training.trained_model_path),
+            training_data=Path(os.path.join(self.config.data_ingestion.unzip_dir, "Chicken-fecal-images")),
+            all_params=self.params,
+            params_image_size=self.params.IMAGE_SIZE,
+            params_batch_size=self.params.BATCH_SIZE    
+        )
+
+        return evaluation_config
