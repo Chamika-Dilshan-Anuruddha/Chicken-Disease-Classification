@@ -13,5 +13,5 @@ joblib # Python library to save/load ML models, cache computations, and parallel
 #types-pyYAML
 scipy
 Flask
-#Flask-Cors
+Flask-Cors
 -e .
